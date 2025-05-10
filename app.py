@@ -322,14 +322,11 @@ st.session_state.x_min = x_min
 st.session_state.x_max = x_max
 st.session_state.derivative_order = derivative_order
 
-# Check if we need to switch tabs based on session state
+# Update tab switching logic based on session state
+# Note: We'll manually update session state instead of using JavaScript to switch tabs
+# as components.v1.html is not available in this environment
 if st.session_state.current_tab == "AI Assistant":
-    # This is a workaround to switch to the AI Assistant tab
-    js = f"""
-    <script>
-        var tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
-        tabs[1].click();
-    </script>
-    """
-    st.components.v1.html(js)
+    # Since we can't use JavaScript to switch tabs,
+    # we'll just notify the user they can switch to the AI Assistant tab manually
+    st.info("Analysis complete! Check the 'AI Assistant' tab to see the results.")
     st.session_state.current_tab = "Visualizer"  # Reset for next time

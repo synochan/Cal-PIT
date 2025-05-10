@@ -100,7 +100,7 @@ def get_calculus_concept(concept):
 def analyze_function(expr_str):
     try:
         x = sp.Symbol('x')
-        expr = sp.sympify(expr_str, locals={'x': x})
+        expr = sp.sympify(expr_str)
         
         # Get function type explanation
         explanation = get_function_explanation(expr_str)
