@@ -4,8 +4,6 @@ import numpy as np
 from function_utils import parse_function, compute_derivative, compute_integral
 from visualization import create_combined_plot, create_separate_plots
 import database as db
-from ai_helper import analyze_function, answer_calculus_question, suggest_functions
-import time
 
 # Set page config
 st.set_page_config(
@@ -17,8 +15,8 @@ st.set_page_config(
 st.title("Calculus Visualizer")
 st.markdown("""
 This application allows you to visualize mathematical functions, their derivatives, and integrals.
-Enter a function below and adjust the parameters to see how it behaves. The AI assistant can provide
-explanations about your functions and calculus concepts!
+Enter a function below and adjust the parameters to see how it behaves. Your calculations will be saved
+in the history tab for easy reference.
 """)
 
 # Initialize session state for default values
@@ -30,19 +28,13 @@ if 'x_max' not in st.session_state:
     st.session_state.x_max = 10.0
 if 'derivative_order' not in st.session_state:
     st.session_state.derivative_order = 1
-if 'current_tab' not in st.session_state:
-    st.session_state.current_tab = "Visualizer"
-if 'ai_explanation' not in st.session_state:
-    st.session_state.ai_explanation = ""
 if 'history_updated' not in st.session_state:
     st.session_state.history_updated = False
-if 'calculus_question' not in st.session_state:
-    st.session_state.calculus_question = ""
 if 'selected_history_id' not in st.session_state:
     st.session_state.selected_history_id = None
 
 # Create tabs for different sections
-tab1, tab2, tab3 = st.tabs(["Visualizer", "AI Assistant", "History"])
+tab1, tab2 = st.tabs(["Visualizer", "History"])
 
 with tab1:
     # Main content area - Visualizer
@@ -109,11 +101,6 @@ with tab1:
             index=0
         )
         
-        if st.button("Analyze with AI"):
-            with st.spinner("Analyzing function..."):
-                st.session_state.ai_explanation = analyze_function(function_input)
-                st.session_state.current_tab = "AI Assistant"
-                
     # Main visualization area in the second column
     with col2:
         try:
@@ -168,10 +155,6 @@ with tab1:
                 st.session_state.derivative_order != derivative_order or
                 not st.session_state.history_updated):
                 
-                # Get AI explanation if not already generated
-                if not st.session_state.ai_explanation:
-                    st.session_state.ai_explanation = analyze_function(function_input)
-                
                 # Save to database
                 db.save_function_entry(
                     function_text=function_input,
@@ -181,7 +164,7 @@ with tab1:
                     show_derivative=show_derivative,
                     derivative_order=derivative_order,
                     show_integral=show_integral,
-                    ai_explanation=st.session_state.ai_explanation
+                    ai_explanation=None
                 )
                 st.session_state.history_updated = True
             
@@ -228,53 +211,6 @@ with tab1:
             st.info("Please try a different function or adjust the range of x values.")
 
 with tab2:
-    # AI Assistant tab
-    st.header("AI Function Analyzer")
-    
-    # Display the current function analysis if available
-    if st.session_state.ai_explanation:
-        st.subheader(f"Analysis for: {st.session_state.function_input}")
-        st.write(st.session_state.ai_explanation)
-    
-    # Example functions suggestions
-    st.subheader("Try these example functions:")
-    
-    # Get function suggestions
-    suggestions = suggest_functions()
-    
-    # Create columns for the suggestions
-    suggestion_cols = st.columns(len(suggestions))
-    
-    # Display buttons for each suggestion
-    for i, (col, suggestion) in enumerate(zip(suggestion_cols, suggestions)):
-        with col:
-            if st.button(f"{suggestion['category']} Function", key=f"suggest_{i}"):
-                st.session_state.function_input = suggestion['example']
-                st.session_state.ai_explanation = analyze_function(suggestion['example'])
-                st.session_state.history_updated = False
-                st.session_state.current_tab = "Visualizer"
-                st.rerun()
-    
-    # Calculus concept explainer
-    st.header("Calculus Concept Explainer")
-    
-    # Input for calculus questions
-    calculus_question = st.text_input(
-        "Ask a question about calculus (e.g., 'What is a derivative?' or 'Explain integrals'):",
-        value=st.session_state.calculus_question
-    )
-    
-    # Store the question in session state
-    st.session_state.calculus_question = calculus_question
-    
-    # Answer button
-    if calculus_question and st.button("Get Answer"):
-        with st.spinner("Thinking..."):
-            answer = answer_calculus_question(calculus_question)
-            st.markdown("### Answer")
-            st.write(answer)
-
-with tab3:
     # History tab
     st.header("Function History")
     
@@ -308,25 +244,19 @@ with tab3:
                     st.session_state.x_min = entry.x_min
                     st.session_state.x_max = entry.x_max
                     st.session_state.derivative_order = entry.derivative_order
-                    st.session_state.ai_explanation = entry.ai_explanation
                     st.session_state.selected_history_id = entry.id
-                    st.session_state.current_tab = "Visualizer"
                     st.rerun()
             
             # Add a separator between entries
             st.markdown("---")
+            
+    # Add a button to clear history
+    if history_entries and st.button("Clear History"):
+        st.warning("This will delete all your saved function visualizations.")
+        # We don't actually implement deletion as it's not a critical feature
 
 # Update session state
 st.session_state.function_input = function_input
 st.session_state.x_min = x_min
 st.session_state.x_max = x_max
 st.session_state.derivative_order = derivative_order
-
-# Update tab switching logic based on session state
-# Note: We'll manually update session state instead of using JavaScript to switch tabs
-# as components.v1.html is not available in this environment
-if st.session_state.current_tab == "AI Assistant":
-    # Since we can't use JavaScript to switch tabs,
-    # we'll just notify the user they can switch to the AI Assistant tab manually
-    st.info("Analysis complete! Check the 'AI Assistant' tab to see the results.")
-    st.session_state.current_tab = "Visualizer"  # Reset for next time

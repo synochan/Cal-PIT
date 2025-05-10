@@ -31,7 +31,7 @@ class FunctionEntry(Base):
     show_derivative = Column(sa.Boolean, default=True)
     derivative_order = Column(Integer, default=1)
     show_integral = Column(sa.Boolean, default=True)
-    ai_explanation = Column(Text)
+    ai_explanation = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
     
     def __repr__(self):
