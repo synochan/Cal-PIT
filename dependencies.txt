@@ -1,0 +1,8 @@
+streamlit==1.32.0
+matplotlib==3.8.3
+numpy==1.26.4
+sympy==1.12.1
+scikit-learn==1.6.1
+scipy==1.12.0
+sqlalchemy==2.0.40
+psycopg2-binary==2.9.10
